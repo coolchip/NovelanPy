@@ -10,6 +10,22 @@ class novelan:
     __port = 0 
     __sock = None
 
+    PARAM_HEATING_TEMPERATURE = 1
+    PARAM_WARMWATER_TEMPERATURE = 2
+    PARAM_HEATING_OPERATION_MODE = 3
+    PARAM_WARMWATER_OPERATION_MODE = 4
+    PARAM_COOLING_OPERATION_MODE = 108
+    PARAM_COOLING_RELEASE_TEMP = 110
+    PARAM_COOLING_INLET_TEMP = 132
+    PARAM_COOLING_START = 850
+    PARAM_COOLING_STOP = 851
+
+    OPERATING_MODE_AUTOMATIC = 0
+    OPERATING_MODE_AUXILIARY_HEATER = 1
+    OPERATING_MODE_PARTY = 2
+    OPERATING_MODE_HOLIDAY = 3
+    OPERATING_MODE_OFF = 4
+
     def __init__(self, host, port=8888):
         self.__host = host
         self.__port = port
@@ -61,6 +77,34 @@ class novelan:
             raise("format size does not fit received bytes")
         return tnames._make(struct.unpack(fmt, recv_msg))
 
+    def __write(self, param, value):
+             #connect
+            self.__connect()
+            
+            #send
+            command = 3002
+            msg = struct.pack("!III", command, param, value)
+            print(msg)
+            totalsent = 0
+            while totalsent < len(msg):
+                sent = self.__sock.send(msg[totalsent:])
+                if sent == 0:
+                    raise RuntimeError("socket connection broken")
+                totalsent = totalsent + sent
+
+            #receive
+            data = self.__sock.recv(4)
+            recv_command = struct.unpack("!I", data)[0]
+            if recv_command != command:
+                raise("received wrong command! ", command, recv_command)
+
+            data = self.__sock.recv(4)
+            resp = struct.unpack("!I", data)[0]
+
+            print("Response: ", resp)
+            self.__sock.close()
+
+
     def __formatTemperatures(self, dct):
         for key in dct:
             if "temp" in key:
@@ -95,50 +139,6 @@ class novelan:
         else:
             return "-1"
 
-
-    PARAM_HEATING_OPERATION_MODE = 3
-    PARAM_HEATING_TEMPERATURE = 1
-    PARAM_WARMWATER_OPERATION_MODE = 4
-    PARAM_WARMWATER_TEMPERATURE = 2
-    PARAM_COOLING_OPERATION_MODE = 108
-    PARAM_COOLING_RELEASE_TEMP = 110
-    PARAM_COOLING_INLET_TEMP = 132
-    PARAM_COOLING_START = 850
-    PARAM_COOLING_STOP = 851
-
-    OPERATING_MODE_AUTOMATIC = 0
-    OPERATING_MODE_AUXILIARY_HEATER = 1
-    OPERATING_MODE_PARTY = 2
-    OPERATING_MODE_HOLIDAY = 3
-    OPERATING_MODE_OFF = 4
-
-    def __write(self, param, value):
-             #connect
-            self.__connect()
-            
-            #send
-            command = 3002
-            msg = struct.pack("!III", command, param, value)
-            print(msg)
-            totalsent = 0
-            while totalsent < len(msg):
-                sent = self.__sock.send(msg[totalsent:])
-                if sent == 0:
-                    raise RuntimeError("socket connection broken")
-                totalsent = totalsent + sent
-
-            #receive
-            data = self.__sock.recv(4)
-            recv_command = struct.unpack("!I", data)[0]
-            if recv_command != command:
-                raise("received wrong command! ", command, recv_command)
-
-            data = self.__sock.recv(4)
-            resp = struct.unpack("!I", data)[0]
-
-            print("Response: ", resp)
-            self.__sock.close()
-
     def writeHeatingMode(self, value):
         param = self.PARAM_HEATING_OPERATION_MODE
         self.__write(param, value)
@@ -147,3 +147,11 @@ class novelan:
         param = self.PARAM_WARMWATER_OPERATION_MODE
         self.__write(param, value)
  
+    def writeHeatingTemperature(self, value):
+        param = self.PARAM_HEATING_TEMPERATURE
+        self.__write(param, value)
+
+    def writeWarmwaterTemperature(self, value):
+        param = self.PARAM_WARMWATER_TEMPERATURE
+        self.__write(param, value)
+
