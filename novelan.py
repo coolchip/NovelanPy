@@ -7,7 +7,7 @@ from collections import namedtuple
 
 class novelan:
     __host = "0.0.0.0"
-    __port = 8888
+    __port = 0 
     __sock = None
 
     def __init__(self, host, port=8888):
@@ -66,17 +66,13 @@ class novelan:
         fmt = '!40xiiiiiiiiiiiii4xiiiii108xiiiiiiiiiii336xiiiii108x'
         statustupel = namedtuple('status', 'temperature_supply temperature_return temperature_reference_return temperature_out_external temperature_hot_gas temperature_outside temperature_outside_avg temperature_servicewater temperature_servicewater_reference temperature_probe_in temperature_probe_out temperature_mk1 temperature_mk1_reference temperature_mk2 temperature_mk2_reference heatpump_solar_collector heatpump_solar_storage temperature_external_source hours_compressor1 starts_compressor1 hours_compressor2 starts_compressor2 hours_zwe1 hours_zwe2 hours_zwe3 hours_heatpump hours_heating hours_warmwater hours_cooling thermalenergy_heating thermalenergy_warmwater thermalenergy_pool thermalenergy_total massflow')
         status = self.__read(3004, fmt, statustupel, True)
-        statusdict = status._asdict()
-        for key in statusdict:
-            print(key, statusdict[key])
+        return status._asdict()
 
     def readParameter(self):
         fmt = '!4xiiii412xi4xi84xi2868xii676x'
         parametertupel = namedtuple('parameter', 'heating_temperature warmwater_temperature heating_operation_mode warmwater_operation_mode cooling_operation_mode cooling_release_temperature cooling_inlet_temp cooling_start_after_hours cooling_stop_after_hours')
         parameter = self.__read(3003, fmt, parametertupel, False)
-        paramdict = parameter._asdict()
-        for key in paramdict:
-            print(key, paramdict[key])
+        return parameter._asdict()
 
 
     PARAM_HEATING_OPERATION_MODE = 3
@@ -122,14 +118,24 @@ class novelan:
             print("Response: ", resp)
             self.__sock.close()
 
-    def writeHeatMode(self, value):
+    def writeHeatingMode(self, value):
         param = self.PARAM_HEATING_OPERATION_MODE
         self.__write(param, value)
         
-
+    def writeWarmwaterMode(self, value):
+        param = self.PARAM_WARMWATER_OPERATION_MODE
+        self.__write(param, value)
+ 
 if __name__ == '__main__':
     myPump = novelan(host="192.168.178.22")
-    myPump.readStatus()
-    myPump.readParameter()
-    myPump.writeHeatMode(novelan.OPERATING_MODE_OFF)
+    statusdict = myPump.readStatus()
+    paramdict = myPump.readParameter()
+
+    for key in statusdict:
+        print(key, statusdict[key])
+
+    for key in paramdict:
+        print(key, paramdict[key])
+
+#    myPump.writeHeatingMode(novelan.OPERATING_MODE_OFF)
 
