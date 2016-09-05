@@ -62,7 +62,7 @@ class novelan:
         return tnames._make(struct.unpack(fmt, recv_msg))
 
 
-    def readPart1(self):
+    def readStatus(self):
         fmt = '!40xiiiiiiiiiiiii4xiiiii108xiiiiiiiiiii336xiiiii108x'
         statustupel = namedtuple('status', 'temperature_supply temperature_return temperature_reference_return temperature_out_external temperature_hot_gas temperature_outside temperature_outside_avg temperature_servicewater temperature_servicewater_reference temperature_probe_in temperature_probe_out temperature_mk1 temperature_mk1_reference temperature_mk2 temperature_mk2_reference heatpump_solar_collector heatpump_solar_storage temperature_external_source hours_compressor1 starts_compressor1 hours_compressor2 starts_compressor2 hours_zwe1 hours_zwe2 hours_zwe3 hours_heatpump hours_heating hours_warmwater hours_cooling thermalenergy_heating thermalenergy_warmwater thermalenergy_pool thermalenergy_total massflow')
         status = self.__read(3004, fmt, statustupel, True)
@@ -70,7 +70,7 @@ class novelan:
         for key in statusdict:
             print(key, statusdict[key])
 
-    def readPart2(self):
+    def readParameter(self):
         fmt = '!4xiiii412xi4xi84xi2868xii676x'
         parametertupel = namedtuple('parameter', 'heating_temperature warmwater_temperature heating_operation_mode warmwater_operation_mode cooling_operation_mode cooling_release_temperature cooling_inlet_temp cooling_start_after_hours cooling_stop_after_hours')
         parameter = self.__read(3003, fmt, parametertupel, False)
@@ -78,33 +78,41 @@ class novelan:
         for key in paramdict:
             print(key, paramdict[key])
 
-    def __write(self):
-#    public boolean setParam(int param, int value) throws IOException {
-#       while (datain.available() > 0) {
-#            datain.readByte();
-#        }
-#        dataout.writeInt(3002);
-#        dataout.writeInt(param);
-#        dataout.writeInt(value);
-#        dataout.flush();
+    def __write(self, param, value):
+             #connect
+            self.__connect()
+            
+            #send
+            command = 3002
+            msg = struct.pack("!III", command, param, value)
+            print(msg)
+            totalsent = 0
+            while totalsent < len(msg):
+                sent = self.__sock.send(msg[totalsent:])
+                if sent == 0:
+                    raise RuntimeError("socket connection broken")
+                totalsent = totalsent + sent
 
-#        int cmd = datain.readInt();
-#        int resp = datain.readInt();
-#        if (cmd != 3002) {
-#            logger.error("can't write parameter {} with value {} to heatpump.", param, value);
-#            return false;
-#        } else {
-#            if (logger.isDebugEnabled()) {
-#                logger.debug("successful parameter {} with value {} to heatpump written.", param, value);
-#            }
-#            return true;
-#        }
-#    }
-        pass
+            #receive
+            data = self.__sock.recv(4)
+            recv_command = struct.unpack("!I", data)[0]
+            if recv_command != command:
+                raise("received wrong command! ", command, recv_command)
 
+            data = self.__sock.recv(4)
+            resp = struct.unpack("!I", data)[0]
+
+            print("Response: ", resp)
+            self.__sock.close()
+
+    def writeHeatMode(self, value):
+        param = 3
+        self.__write(param, value)
+        
 
 if __name__ == '__main__':
     myPump = novelan(host="192.168.178.22")
-    myPump.readPart1()
-    myPump.readPart2()
+    myPump.readStatus()
+    myPump.readParameter()
+    myPump.writeHeatMode(0)
 
