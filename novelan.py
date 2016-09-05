@@ -78,6 +78,23 @@ class novelan:
         for key in paramdict:
             print(key, paramdict[key])
 
+
+    PARAM_HEATING_OPERATION_MODE = 3
+    PARAM_HEATING_TEMPERATURE = 1
+    PARAM_WARMWATER_OPERATION_MODE = 4
+    PARAM_WARMWATER_TEMPERATURE = 2
+    PARAM_COOLING_OPERATION_MODE = 108
+    PARAM_COOLING_RELEASE_TEMP = 110
+    PARAM_COOLING_INLET_TEMP = 132
+    PARAM_COOLING_START = 850
+    PARAM_COOLING_STOP = 851
+
+    OPERATING_MODE_AUTOMATIC = 0
+    OPERATING_MODE_AUXILIARY_HEATER = 1
+    OPERATING_MODE_PARTY = 2
+    OPERATING_MODE_HOLIDAY = 3
+    OPERATING_MODE_OFF = 4
+
     def __write(self, param, value):
              #connect
             self.__connect()
@@ -106,7 +123,7 @@ class novelan:
             self.__sock.close()
 
     def writeHeatMode(self, value):
-        param = 3
+        param = self.PARAM_HEATING_OPERATION_MODE
         self.__write(param, value)
         
 
@@ -114,5 +131,5 @@ if __name__ == '__main__':
     myPump = novelan(host="192.168.178.22")
     myPump.readStatus()
     myPump.readParameter()
-    myPump.writeHeatMode(0)
+    myPump.writeHeatMode(novelan.OPERATING_MODE_OFF)
 
