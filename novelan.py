@@ -38,7 +38,6 @@ class novelan:
         recv_msg = bytearray()
 
         try:
-            #connect
             self.__connect()
             
             #send
@@ -78,13 +77,13 @@ class novelan:
         return tnames._make(struct.unpack(fmt, recv_msg))
 
     def __write(self, param, value):
-             #connect
+
+        try:
             self.__connect()
             
             #send
             command = 3002
             msg = struct.pack("!III", command, param, value)
-            print(msg)
             totalsent = 0
             while totalsent < len(msg):
                 sent = self.__sock.send(msg[totalsent:])
@@ -99,13 +98,14 @@ class novelan:
                 raise("received wrong command! ", command, recv_command)
 
             data = self.__sock.recv(4)
-            resp = struct.unpack("!I", data)[0]
+            response = struct.unpack("!I", data)[0]
 
-            print("Response: ", resp)
+        finally:
             self.__sock.close()
 
 
     def __formatTemperatures(self, dct):
+        #temperatures are integers and have to devide by 10 to get the right value
         for key in dct:
             if "temp" in key:
                 dct[key] = dct[key]/10
