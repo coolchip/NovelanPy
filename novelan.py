@@ -77,7 +77,6 @@ class novelan:
         return tnames._make(struct.unpack(fmt, recv_msg))
 
     def __write(self, param, value):
-
         try:
             self.__connect()
             
@@ -102,7 +101,6 @@ class novelan:
 
         finally:
             self.__sock.close()
-
 
     def __formatTemperatures(self, dct):
         #temperatures are integers and have to devide by 10 to get the right value
