@@ -68,6 +68,14 @@ class novelan:
         status = self.__read(3004, fmt, statustupel, True)
         return status._asdict()
 
+    def readStatusValue(self, name):
+        statusdict = self.readStatus()
+        if name in statusdict:
+            return statusdict[name]
+        else:
+            return "-1"
+
+
     def readParameter(self):
         fmt = '!4xiiii412xi4xi84xi2868xii676x'
         parametertupel = namedtuple('parameter', 'heating_temperature warmwater_temperature heating_operation_mode warmwater_operation_mode cooling_operation_mode cooling_release_temperature cooling_inlet_temp cooling_start_after_hours cooling_stop_after_hours')
@@ -131,11 +139,13 @@ if __name__ == '__main__':
     statusdict = myPump.readStatus()
     paramdict = myPump.readParameter()
 
-    for key in statusdict:
-        print(key, statusdict[key])
+    print(myPump.readStatusValue("temperature_outside"))
 
-    for key in paramdict:
-        print(key, paramdict[key])
+#    for key in statusdict:
+#        print(key, statusdict[key])
+
+#    for key in paramdict:
+#        print(key, paramdict[key])
 
 #    myPump.writeHeatingMode(novelan.OPERATING_MODE_OFF)
 
