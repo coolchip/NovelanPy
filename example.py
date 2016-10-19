@@ -18,7 +18,8 @@ if __name__ == '__main__':
 
     print("\n")
 
-    print(myPump.readStatusValue("temperature_outside"))
+    outsideTemperature = str(myPump.readStatusValue("temperature_outside"))
+    print("Draußen sind es " + outsideTemperature + "°C.")
 
 #    myPump.writeHeatingMode(novelan.OPERATING_MODE_OFF)
 
